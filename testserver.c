@@ -4,9 +4,8 @@
 #include <unistd.h>
 #include <arpa/inet.h>
 #include <pthread.h>
-#include "../constants.h"
 
-#define PORT 3500
+#define PORT 8080
 #define MAX_CLIENTS 4
 #define BUFFER_SIZE 1024
 
@@ -60,7 +59,7 @@ int main() {
 
     server_addr.sin_family = AF_INET;
     server_addr.sin_port = htons(PORT);
-    inet_pton(AF_INET, "0.0.0.0", &server_addr.sin_addr);
+    server_addr.sin_addr.s_addr = INADDR_ANY;
 
     // Bind socket
     if (bind(server_socket, (struct sockaddr *)&server_addr, sizeof(server_addr)) < 0) {
@@ -89,12 +88,6 @@ int main() {
             clients[client_count++] = client_socket;
             pthread_create(&tid, NULL, handle_client, &client_socket);
             printf("New client connected\n");
-            for (int i = 0; i < client_count; i++) {
-                char buffer[8];
-                sprintf(buffer, "%d%c%d", client_count-1, 'M', 5);
-                printf("sending %s\n", buffer);
-                write(clients[i], buffer, strlen(buffer));            
-            }
         } else {
             printf("Max clients connected. Connection refused.\n");
             close(client_socket);

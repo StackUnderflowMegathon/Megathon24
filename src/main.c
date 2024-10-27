@@ -1,70 +1,67 @@
-#include "raylib.h"
-#include <stdio.h>
-#include "resource_dir.h"
+#include "constants.h"
+#include "networking/client.c"
+#include "./main_menu.c"
+#include "./trick_or_treat.c"
+
 
 int main()
 {
-    // Button Coordinates Definitions
-    Rectangle play_button = {
-        612,
-        354,
-        200,
-        60
-    };
-    Rectangle exit_button = {
-        612,
-        424,
-        200,
-        60
-    };
+
     
     SetConfigFlags(FLAG_VSYNC_HINT | FLAG_WINDOW_HIGHDPI);
 
-
     // Initialize Window
-    InitWindow(1920, 1080, "Overtale"); 
+    InitWindow(GetScreenWidth(), GetScreenHeight(), "Overtale"); 
     SearchAndSetResourceDir("resources");
     Texture wabbit = LoadTexture("wabbit_alpha.png");
-    while (!WindowShouldClose())
+    Texture textures[6] = {LoadTexture("background.png"), LoadTexture("Green.PNG"), LoadTexture("Blue.PNG"), LoadTexture("Yellow.PNG"), LoadTexture("Red.PNG"), LoadTexture("Reaper.png")};
+    
+    int SocketDescriptor = connect_to_server("10.2.132.132");
+    char buffer[1024];
+    read(SocketDescriptor, buffer, sizeof(buffer));
+    int PlayerId = buffer[0]-'0';
+    printf("%d\n", PlayerId);
+    
+    int current_screen = MAIN_MENU;
+    int positions[4] = {-1,-1,-1,-1};
+    char state[4] = {'\0', '\0','\0','\0'};
+    positions[PlayerId] = 5;
+    pthread_t tid;
+
+    struct thread_args args = {positions, SocketDescriptor, state};
+
+
+    pthread_create(&tid, NULL, receive_packets, (void*) &args);
+    int flag = 1;
+
+
+
+    while (!WindowShouldClose() && flag)
     {
-        // Draw Buttons
         BeginDrawing();
-        ClearBackground(BLACK);
-        DrawRectangleRec(play_button, DARKGRAY);
-        DrawRectangleRec(exit_button, DARKGRAY);
 
-        // Draw Start Game Button
-        char* play_text = "Start Game";
-        Vector2 play_pos = {
-            play_button.x + play_button.width/2 - MeasureText(play_text, 30)/2,
-            play_button.y + play_button.height/2 - 15
-        };
-        DrawText(play_text, play_pos.x, play_pos.y, 30, WHITE);
+        switch(current_screen){
 
-        // Handle Start Game Click
-        if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
-            Vector2 mouse_pos = GetMousePosition();
-            if (CheckCollisionPointRec(mouse_pos, play_button)) {
-                printf("");
-            }
+            case MAIN_MENU:
+                main_menu(&current_screen);
+                break;
+            
+            case HOST:
+                //TODO
+                break;
+
+            case CONNECT:
+                //TODO
+                break;
+
+            case GAME1:
+                trick_or_treat(PlayerId, &current_screen, textures, positions, state, SocketDescriptor);
+                break;
+                
+            case EXIT:
+                flag = 0;
+                break;
         }
-
-        // Draw Exit Game Button
-        char* exit_text = "Exit Game";
-        Vector2 exit_pos = {
-            exit_button.x + exit_button.width/2 - MeasureText(exit_text, 30)/2,
-            exit_button.y + exit_button.height/2 - 15
-        };
-        DrawText(exit_text, exit_pos.x, exit_pos.y, 30, WHITE);
-        
-        // Handle Exit Game Click
-        if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
-            Vector2 mouse_pos = GetMousePosition();
-            if (CheckCollisionPointRec(mouse_pos, exit_button)) {
-                printf("");
-            }
-        }
-        DrawTexture(wabbit, 400, 200, WHITE);
         EndDrawing();
     }
     
