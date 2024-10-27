@@ -4,6 +4,7 @@
 #include <unistd.h>
 #include <arpa/inet.h>
 #include <pthread.h>
+#include <time.h>
 #include "../constants.h"
 
 #define PORT 3500
@@ -46,7 +47,7 @@ void *handle_client(void *client_socket) {
 }
 
 int main() {
-    int server_socket, client_socket;
+    int server_socket, client_socket, temp = 1;
     struct sockaddr_in server_addr, client_addr;
     socklen_t addr_size;
     pthread_t tid;
@@ -57,6 +58,7 @@ int main() {
         perror("Socket creation failed");
         exit(EXIT_FAILURE);
     }
+    setsockopt(server_socket, SOL_SOCKET, SO_REUSEADDR,&temp ,sizeof(int));
 
     server_addr.sin_family = AF_INET;
     server_addr.sin_port = htons(PORT);

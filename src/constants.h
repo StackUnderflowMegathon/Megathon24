@@ -8,7 +8,8 @@ typedef enum {
 } screens;
 
 struct thread_args{
-    int *positions;
+    volatile int *positions;
     int SocketDescriptor;
-    char *state;
+    volatile char *state;
+    int PlayerId;
 };

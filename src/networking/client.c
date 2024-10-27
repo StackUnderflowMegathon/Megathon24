@@ -9,28 +9,68 @@
 #include <arpa/inet.h>
 #include <string.h>
 #include <stdlib.h>
+#include <time.h>
 #define CONNECTION_PORT 3500
 
-void send_packet(char* buffer, int SocketDescriptor){
-	write(SocketDescriptor, buffer, strlen(buffer));
+#ifdef WIN32
+#include <windows.h>
+#elif _POSIX_C_SOURCE >= 199309L
+#include <time.h>   // for nanosleep
+#else
+#include <unistd.h> // for usleep
+#endif
+
+void sleep_ms(int milliseconds){ // cross-platform sleep function
+#ifdef WIN32
+    Sleep(milliseconds);
+#elif _POSIX_C_SOURCE >= 199309L
+    struct timespec ts;
+    ts.tv_sec = milliseconds / 1000;
+    ts.tv_nsec = (milliseconds % 1000) * 1000000;
+    nanosleep(&ts, NULL);
+#else
+    if (milliseconds >= 1000)
+      sleep(milliseconds / 1000);
+    usleep((milliseconds % 1000) * 1000);
+#endif
+}
+
+void* send_packet(void*  arg){
+	int SocketDescriptor = (*((struct thread_args *)arg)).SocketDescriptor;
+	int pid = (*((struct thread_args *)arg)).PlayerId;
+	pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
+
+	while(1){
+		pthread_mutex_lock(&mutex);
+		char buffer[8];
+		sprintf(buffer, "%d%c%d", pid, 'M', (*((struct thread_args *)arg)).positions[pid]);
+		write(SocketDescriptor, buffer, strlen(buffer));
+		pthread_mutex_unlock(&mutex);
+
+		sleep_ms(50);
+	}
 }
 
 void *receive_packets(void *arg)
 {
 	char buffer[50];
 	int bytes_read;
-	printf("INSIDE THREAD\n");
+	pthread_mutex_t mtx = PTHREAD_MUTEX_INITIALIZER;
 
 	while ((bytes_read = read((*((struct thread_args *)arg)).SocketDescriptor, buffer, sizeof(buffer) - 1)) > 0)
 	{
+		fprintf(stderr, "%d\n", bytes_read);
 		buffer[bytes_read] = '\0';
+		pthread_mutex_lock(&mtx);
 		(*(struct thread_args *)arg).state[buffer[0]-'0'] = buffer[1];
+		fprintf(stderr, "%s\n", buffer);
 		int i = 2;
 		int pos= 0;
 		while(buffer[i] != '\0'){
 			pos = pos*10 + (buffer[i]-'0');
 			i++;
 		}
+		pthread_mutex_unlock(&mtx);
 
 		(*(struct thread_args *)arg).positions[buffer[0]-'0'] = pos;
 	}

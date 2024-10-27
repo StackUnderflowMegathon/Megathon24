@@ -11,7 +11,7 @@ int main()
     SetConfigFlags(FLAG_VSYNC_HINT | FLAG_WINDOW_HIGHDPI);
 
     // Initialize Window
-    InitWindow(GetScreenWidth(), GetScreenHeight(), "Overtale"); 
+    InitWindow(1920, 1080, "Overtale"); 
     SearchAndSetResourceDir("resources");
     Texture wabbit = LoadTexture("wabbit_alpha.png");
     Texture textures[6] = {LoadTexture("background.png"), LoadTexture("Green.PNG"), LoadTexture("Blue.PNG"), LoadTexture("Yellow.PNG"), LoadTexture("Red.PNG"), LoadTexture("Reaper.png")};
@@ -20,18 +20,19 @@ int main()
     char buffer[1024];
     read(SocketDescriptor, buffer, sizeof(buffer));
     int PlayerId = buffer[0]-'0';
-    printf("%d\n", PlayerId);
     
     int current_screen = MAIN_MENU;
-    int positions[4] = {-1,-1,-1,-1};
-    char state[4] = {'\0', '\0','\0','\0'};
+    volatile int positions[4] = {-1,-1,-1,-1};
+    volatile char state[4] = {'\0', '\0','\0','\0'};
     positions[PlayerId] = 5;
     pthread_t tid;
+    pthread_t tid2;
 
-    struct thread_args args = {positions, SocketDescriptor, state};
+    struct thread_args args = {positions, SocketDescriptor, state, PlayerId};
 
 
     pthread_create(&tid, NULL, receive_packets, (void*) &args);
+    pthread_create(&tid2, NULL, send_packet, (void*) &args);
     int flag = 1;
 
 
