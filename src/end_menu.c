@@ -10,13 +10,13 @@ void end_menu(int* current_screen, volatile int* positions){
     }
     
     ClearBackground(BLACK);
-    DrawText("GAME OVER", GetScreenWidth()/2 - 325, GetScreenHeight()/2-150, 100, WHITE);
+    DrawText("GAME OVER", 1920/2 - 325, 1080/2-150, 100, WHITE);
     char text[20];
     sprintf(text, "Player %d WON!", maxind + 1);
-    DrawText(text, GetScreenWidth()/2 - 350, GetScreenHeight()/2 - 50, 100, WHITE);
+    DrawText(text, 1920/2 - 350, 1080/2 - 50, 100, WHITE);
 
-    // Rectangle main_menu_button = { GetScreenWidth()/2 - 100, GetScreenHeight()/2 - 100, 200, 60 };
-    Rectangle exit_button = { GetScreenWidth()/2 - 100, GetScreenHeight()/2 + 100, 200, 60 };
+    // Rectangle main_menu_button = { 1920/2 - 100, 1080/2 - 100, 200, 60 };
+    Rectangle exit_button = { 1920/2 - 100, 1080/2 + 100, 200, 60 };
 
     // DrawRectangleRec(main_menu_button, DARKGRAY);
     DrawRectangleRec(exit_button, DARKGRAY);

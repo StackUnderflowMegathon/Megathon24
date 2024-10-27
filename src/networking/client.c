@@ -41,13 +41,14 @@ void* send_packet(void*  arg){
 	pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 
 	while(1){
-		pthread_mutex_lock(&mutex);
+		
 		char buffer[8];
-		sprintf(buffer, "%d%c%d", pid, 'M', (*((struct thread_args *)arg)).positions[pid]);
-		write(SocketDescriptor, buffer, strlen(buffer));
+		pthread_mutex_lock(&mutex);
+		sprintf(buffer, "%d%c%d", pid, (*((struct thread_args *)arg)).state[pid], (*((struct thread_args *)arg)).positions[pid]);
 		pthread_mutex_unlock(&mutex);
+		write(SocketDescriptor, buffer, strlen(buffer));
 
-		sleep_ms(50);
+		sleep_ms(100);
 	}
 }
 
@@ -69,7 +70,7 @@ void *receive_packets(void *arg)
 		}
 		else{
 			(*(struct thread_args *)arg).state[buffer[0]-'0'] = buffer[1];
-			fprintf(stderr, "%s\n", buffer);
+			// fprintf(stderr, "%s\n", buffer);
 			int i = 2;
 			int pos= 0;
 			while(buffer[i] != '\0'){

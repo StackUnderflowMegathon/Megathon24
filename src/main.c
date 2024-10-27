@@ -29,6 +29,7 @@ int main()
     volatile int positions[4] = {-1,-1,-1,-1};
     volatile char state[4] = {'\0', '\0','\0','\0'};
     positions[PlayerId] = 5;
+    state[PlayerId] = 'M';
     int flipped = 0;
     pthread_t tid;
     pthread_t tid2;
