@@ -59,20 +59,28 @@ void *receive_packets(void *arg)
 
 	while ((bytes_read = read((*((struct thread_args *)arg)).SocketDescriptor, buffer, sizeof(buffer) - 1)) > 0)
 	{
-		fprintf(stderr, "%d\n", bytes_read);
+		// fprintf(stderr, "%d\n", bytes_read);
 		buffer[bytes_read] = '\0';
+
+
 		pthread_mutex_lock(&mtx);
-		(*(struct thread_args *)arg).state[buffer[0]-'0'] = buffer[1];
-		fprintf(stderr, "%s\n", buffer);
-		int i = 2;
-		int pos= 0;
-		while(buffer[i] != '\0'){
-			pos = pos*10 + (buffer[i]-'0');
-			i++;
+		if(buffer[0] == 'F' || buffer[0] == 'S'){
+			(*((struct thread_args *)arg)->Flipped) = buffer[0] == 'F' ? 1 : 0;
+		}
+		else{
+			(*(struct thread_args *)arg).state[buffer[0]-'0'] = buffer[1];
+			fprintf(stderr, "%s\n", buffer);
+			int i = 2;
+			int pos= 0;
+			while(buffer[i] != '\0'){
+				pos = pos*10 + (buffer[i]-'0');
+				i++;
+			}
+			(*(struct thread_args *)arg).positions[buffer[0]-'0'] = pos;
 		}
 		pthread_mutex_unlock(&mtx);
 
-		(*(struct thread_args *)arg).positions[buffer[0]-'0'] = pos;
+
 	}
 }
 

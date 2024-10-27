@@ -3,12 +3,14 @@
 #include <stdlib.h>
 #include "resource_dir.h"
 
-void main_menu(int* current_screen) {
+void main_menu(int* current_screen, Texture logo) {
 
     ClearBackground(BLACK);
+
+    DrawTexture(logo, 500, 100, WHITE);
     // Button Coordinates Definitions
-    Rectangle play_button = { GetScreenWidth()/2 - 100, GetScreenHeight()/2 - 100, 200, 60 };
-    Rectangle exit_button = { GetScreenWidth()/2 - 100, GetScreenHeight()/2 + 100, 200, 60 };
+    Rectangle play_button = { 500, 900, 200, 60 };
+    Rectangle exit_button = { 1200, 900, 200, 60 };
 
     DrawRectangleRec(play_button, DARKGRAY);
     DrawRectangleRec(exit_button, DARKGRAY);

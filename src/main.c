@@ -2,21 +2,25 @@
 #include "networking/client.c"
 #include "./main_menu.c"
 #include "./trick_or_treat.c"
+#include "end_menu.c"
 
 
 int main()
 {
 
-    
+    char ip_address[30];
+    printf("Set host IP address: ");
+    scanf("%s", ip_address);
+
     SetConfigFlags(FLAG_VSYNC_HINT | FLAG_WINDOW_HIGHDPI);
 
     // Initialize Window
     InitWindow(1920, 1080, "Overtale"); 
     SearchAndSetResourceDir("resources");
-    Texture wabbit = LoadTexture("wabbit_alpha.png");
-    Texture textures[6] = {LoadTexture("background.png"), LoadTexture("Green.PNG"), LoadTexture("Blue.PNG"), LoadTexture("Yellow.PNG"), LoadTexture("Red.PNG"), LoadTexture("Reaper.png")};
-    
-    int SocketDescriptor = connect_to_server("10.2.132.132");
+    Texture textures[8] = {LoadTexture("background.png"), LoadTexture("Green.PNG"), LoadTexture("Blue.PNG"), LoadTexture("Yellow.PNG"), LoadTexture("Red.PNG"), LoadTexture("Reaper1.png"), LoadTexture("Reaper2.png"), LoadTexture("Dead.png")};
+    Texture logo = LoadTexture("Overtale.png");
+
+    int SocketDescriptor = connect_to_server(ip_address);
     char buffer[1024];
     read(SocketDescriptor, buffer, sizeof(buffer));
     int PlayerId = buffer[0]-'0';
@@ -25,10 +29,11 @@ int main()
     volatile int positions[4] = {-1,-1,-1,-1};
     volatile char state[4] = {'\0', '\0','\0','\0'};
     positions[PlayerId] = 5;
+    int flipped = 0;
     pthread_t tid;
     pthread_t tid2;
 
-    struct thread_args args = {positions, SocketDescriptor, state, PlayerId};
+    struct thread_args args = {positions, SocketDescriptor, state, PlayerId, &flipped};
 
 
     pthread_create(&tid, NULL, receive_packets, (void*) &args);
@@ -44,7 +49,7 @@ int main()
         switch(current_screen){
 
             case MAIN_MENU:
-                main_menu(&current_screen);
+                main_menu(&current_screen, logo);
                 break;
             
             case HOST:
@@ -56,17 +61,20 @@ int main()
                 break;
 
             case GAME1:
-                trick_or_treat(PlayerId, &current_screen, textures, positions, state, SocketDescriptor);
+                trick_or_treat(PlayerId, &current_screen, textures, positions, state, flipped);
                 break;
                 
             case EXIT:
                 flag = 0;
                 break;
+
+            case END_MENU:
+                end_menu(&current_screen, positions);
+                break;
         }
         EndDrawing();
     }
     
-    UnloadTexture(wabbit);
     CloseWindow();
     return 0;
 }

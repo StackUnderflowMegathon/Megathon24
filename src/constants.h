@@ -5,6 +5,7 @@ typedef enum {
     HOST,
     CONNECT,
     EXIT,
+    END_MENU,
 } screens;
 
 struct thread_args{
@@ -12,4 +13,5 @@ struct thread_args{
     int SocketDescriptor;
     volatile char *state;
     int PlayerId;
+    int* Flipped;
 };
